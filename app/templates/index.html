@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Speech-to-Text Summarizer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+  <div class="container">
+    <h1 class="title">YouTube Speech-to-Text Summarizer</h1>
+    <p class="subtitle">Transform speech into concise, readable text summaries.</p>
+
+    <!-- Input Section -->
+    <div class="input-section">
+      <input id="youtube-url" type="text" placeholder="Enter YouTube link..." />
+      <button id="load-video">Load Video</button>
+    </div>
+
+    <!-- Video Player -->
+    <div id="video-container" style="display: none;">
+      <div id="player-wrapper"></div>
+    </div>
+
+    <button id="extract-audio" style="display: none;">Extract Audio</button>
+
+    <!-- Audio Section -->
+    <div id="audio-section" style="display: none;">
+      <div class="audio-icon">🎵</div>
+      <audio id="audio-player" controls></audio>
+    </div>
+
+    <!-- Summary Section -->
+    <div id="summary-section" style="display: none;">
+      <div id="summary-title">Summary</div>
+      <div id="summary">Summary will appear here...</div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("load-video").addEventListener("click", () => {
+      const url = document.getElementById("youtube-url").value.trim();
+
+      // Extract YouTube Video ID
+      const videoIdMatch = url.match(
+        /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+      );
+
+      if (videoIdMatch && videoIdMatch[1]) {
+        const videoId = videoIdMatch[1];
+        console.log("Extracted Video ID:", videoId); // Debugging
+
+        // Use a direct YouTube embed URL (No API needed)
+        const iframe = `<iframe width="560" height="315"
+            src="https://www.youtube.com/embed/${videoId}?rel=0&showinfo=0"
+            frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+        </iframe>`;
+
+        // Set the iframe into the container
+        document.getElementById("player-wrapper").innerHTML = iframe;
+
+        // Show the video player
+        document.getElementById("video-container").style.display = "block";
+        document.getElementById("extract-audio").style.display = "block";
+      } else {
+        alert("Invalid YouTube URL! Please enter a valid link.");
+      }
+    });
+
+    document.getElementById("extract-audio").addEventListener("click", async () => {
+      const videoUrl = document.getElementById("youtube-url").value;
+      const audioSection = document.getElementById("audio-section");
+      const extractButton = document.getElementById("extract-audio");
+      const audioPlayer = document.getElementById("audio-player");
+      
+      // Show loading state
+      extractButton.disabled = true;
+      extractButton.textContent = "Extracting audio...";
+      audioSection.style.display = "none";
+      document.getElementById("summary-section").style.display = "none";
+
+      try {
+        const response = await fetch('/extract', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ video_url: videoUrl })
+        });
+
+        const data = await response.json();
+        console.log("Server response:", data);
+
+        if (data.status === 'success' && data.audio_url) {
+          console.log("Setting audio source to:", data.audio_url);
+          audioPlayer.src = data.audio_url;
+          
+          // Add error handler for audio loading
+          audioPlayer.onerror = (e) => {
+            console.error("Audio player error:", e);
+            alert("Error loading audio file. Please try again.");
+          };
+
+          // Show audio section only after source is set
+          audioSection.style.display = "flex";
+          document.getElementById("summary-section").style.display = "block";
+        } else {
+          console.error("Error response:", data);
+          alert(data.message || "Failed to extract audio");
+        }
+      } catch (error) {
+        console.error("Error during extraction:", error);
+        alert("An error occurred while extracting audio");
+      } finally {
+        // Reset button state
+        extractButton.disabled = false;
+        extractButton.textContent = "Extract Audio";
+      }
+    });
+  </script>
+</body>
+</html>

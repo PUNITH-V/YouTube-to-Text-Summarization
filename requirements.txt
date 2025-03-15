@@ -1,0 +1,5 @@
+Flask
+FastAPI
+uvicorn
+yt-dlp
+ffmpeg-python
