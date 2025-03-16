@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
-from app import flask_app
+from . import flask_app
 import os
 import requests
 import urllib.parse
