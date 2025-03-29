@@ -1,4 +1,6 @@
-#!/Users/venkatavarshithreddymettukuru/Documents/YouTube-to-Text-Summarization/venv/bin/python3.12
+#!/bin/sh
+'''exec' "/Users/venkatavarshithreddymettukuru/Documents/YouTube-to-Text-Summarization /venv/bin/python3.13" "$0" "$@"
+' '''
 # -*- coding: utf-8 -*-
 import re
 import sys
